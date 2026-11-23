@@ -10,6 +10,7 @@ import asyncio
 import json
 import os
 import shutil
+import sqlite3
 import sys
 import traceback
 from pathlib import Path
@@ -26,15 +27,28 @@ ALLOWED_POSTS = {"/api/plan/preview"}      # asks the server a question (what wo
 SEED = Path(__file__).resolve().parent / "backend" / "seed" / "demo.db"     # the finished demo project, built by build_seed.py (refresh.sh runs it)
 
 
-def _database_files(db: Path) -> list[Path]:
-    return [db, db.with_name(db.name + "-wal"), db.with_name(db.name + "-shm")]
+def _seed_is_sound() -> bool:
+    """Look inside the seed before using it (read-only, the file is never touched): a whole database with a project in it."""
+    try:
+        conn = sqlite3.connect(f"file:{SEED}?mode=ro&immutable=1", uri=True)
+        try:
+            return conn.execute("PRAGMA quick_check").fetchone()[0] == "ok" and conn.execute("SELECT COUNT(*) FROM projects").fetchone()[0] >= 1
+        finally:
+            conn.close()
+    except Exception:
+        traceback.print_exc()
+        return False
 
 
 def _plant_seed() -> bool:
     """Start this copy of the app from the saved demo project, so EVERY copy has the same project with the same ids. (Vercel runs several copies at once; when each built its
-    own, the list from one named a project another did not know.) False, and nothing is done, when there is no seed or a database is already there."""
+    own, the list from one named a project another did not know.) False, and nothing is done, when there is no seed, it is not sound, or a database is already there: the app
+    then starts empty and builds the project itself on the first visit (the old way)."""
     db = get_settings().db_path
     if not SEED.is_file() or db.exists():
+        return False
+    if not _seed_is_sound():
+        print("demo: the seed is not usable; starting empty and building the project instead", flush=True)
         return False
     db.parent.mkdir(parents=True, exist_ok=True)
     part = db.with_name(db.name + ".part")
@@ -43,21 +57,9 @@ def _plant_seed() -> bool:
     return True
 
 
-def _make_app():
-    """The app, started from the seed when there is one. A seed the app cannot open is logged and set aside, and the app starts empty and builds the project itself (the old way)."""
-    if not _plant_seed():
-        return create_app(), False
-    try:
-        return create_app(), True
-    except Exception:
-        traceback.print_exc()
-        print("demo: the seed could not be opened; starting empty and building the project instead", flush=True)
-        for f in _database_files(get_settings().db_path):
-            f.unlink(missing_ok=True)
-        return create_app(), False
+_seeded = _plant_seed()
 
-
-app, _seeded = _make_app()
+app = create_app()      # keep this a plain `app = create_app()` line: Vercel's build looks for exactly this to find the app
 
 _state = {"ready": _seeded, "lock": None}      # ready: nothing left to build
 
