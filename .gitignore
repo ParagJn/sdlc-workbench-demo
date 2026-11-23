@@ -1,0 +1,9 @@
+# Python and Mac noise
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# The link the Vercel command line makes to a project (only if you ever use the command line)
+.vercel/
+
+# NOTE: backend/.env is committed ON PURPOSE. It holds model names, prices and ADMIN_NAME only: no keys. refresh.sh refuses to continue if a key appears in it.

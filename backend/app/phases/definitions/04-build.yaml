@@ -1,0 +1,13 @@
+key: build
+order: 4
+name: "Build"
+summary: Brief a coding agent (Claude, Copilot, GPT or Gemini) so it can build the application. The design's own words are copied into one backend file for each group of APIs and one frontend file for each screen. This system does not write the application.
+approver: technical lead
+artefacts:
+  - key: build_brief
+    name: Build brief
+    id_prefix: BLD-BRF
+    role: solution_architect
+    required: true
+    optional_for: [automation]
+    description: A set of Markdown files for a coding agent - a start-here file, a screen-to-API map, one backend file for each group of APIs, one frontend file for each screen, a traceability list and a checklist - each copying the design items it builds.
