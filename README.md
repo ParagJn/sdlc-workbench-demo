@@ -13,7 +13,9 @@ This is a **separate project** with its own repository. It is a copy, not a link
 | `backend/app/` | The app's code, as copied | `refresh.sh` |
 | `backend/recordings/demo/` | The recorded model replies the demo plays | `refresh.sh` |
 | `public/` | The built website, with the name `demo-user` set in the page | `refresh.sh` |
-| `requirements.txt` | The app's Python packages | `refresh.sh` |
+| `requirements.txt` | The app's Python packages (`refresh.sh` adds `python-multipart` after copying: the main project's list leaves it out, and the app will not start on a fresh install without it) | `refresh.sh` |
+| `backend/seed/demo.db` | The finished sample project saved as a database file (about 1 MB). Every copy of the app on Vercel starts from it, so they all have the same project with the same ids | `refresh.sh` (runs `build_seed.py`) |
+| `build_seed.py` | Builds that file offline from the recordings: no server, no model call | you, by hand |
 | `backend/.env` | The demo's only settings: replay mode, `ADMIN_NAME=demo-user`, model names and prices, the database in `/tmp`. **No keys.** | you, by hand |
 | `index.py` | Vercel's door. Builds the demo project on the first visit and turns away every request that would change something | you, by hand |
 | `vercel.json` | The function's time limit (300 s, the Hobby maximum) and the `backend/` folder to include | you, by hand |
@@ -22,7 +24,9 @@ This is a **separate project** with its own repository. It is a copy, not a link
 
 ## How it works
 
-Vercel is not a server that stays on: it starts a copy of the app when a visit arrives and stops it after a quiet spell. On the first visit to each new copy, `index.py` lets the app start (an empty database in `/tmp`, with `demo-user` as the only person, an Administrator), then builds the sample project from the recordings, using the app's own prepared-demo steps. The first visit takes a few seconds; the rest are normal. The database is rebuilt every time, so nothing a visitor does can last, and writes are switched off anyway.
+Vercel is not a server that stays on: it starts a copy of the app when a visit arrives, often several at once, and stops them after a quiet spell. Each new copy starts from the same saved database (`backend/seed/demo.db`, copied into `/tmp`), so every copy has the same sample project with the same ids and the first visit is instant. `demo-user` is the only person, an Administrator. The database in `/tmp` is thrown away with the copy, so nothing a visitor does can last, and writes are switched off anyway.
+
+If the seed is missing or unusable, `index.py` says so in the function log and falls back to building the project from the recordings on the first visit (a few seconds; but then copies can disagree about the project's id, and a visitor may see "not found").
 
 ## First publish
 
@@ -44,11 +48,11 @@ Vercel is not a server that stays on: it starts a copy of the app when a visit a
 ## Updating the demo (from time to time)
 
 ```bash
-./refresh.sh /Users/paragjain/dev-works/SDLC-Workbench      # shows what changed
+./refresh.sh /Users/paragjain/dev-works/SDLC-Workbench      # copies the latest in, rebuilds the seed, shows what changed
 git add -A && git commit -m "Refresh the demo" && git push   # Vercel redeploys on its own
 ```
 
-If a prompt changed in the main project, re-record the demo there first (its `docs/DEMO.md`). With out-of-date recordings the first visit shows an empty project list and the reason is in the function log.
+`refresh.sh` also rebuilds `backend/seed/demo.db` from the recordings, so the seed cannot drift from them. If a prompt changed in the main project, re-record the demo there first (its `docs/DEMO.md`): with out-of-date recordings the refresh stops at the seed step and says so.
 
 ## Check after a deploy
 
@@ -63,7 +67,7 @@ If the project list is empty, open the function log in Vercel: `index.py` prints
 
 ## Limits
 
-- **The database is temporary** (`/tmp`, not shared): a new copy of the app means a new database and a new project id. A visitor who is moved to a new copy mid-visit may see "not found" and should go back to the home page.
+- **The database is temporary** (`/tmp`, not shared between copies), but every copy starts from the same seed, so the project id is the same everywhere. Only if the seed is missing or unusable can copies differ (see How it works).
 - **Nothing runs here**: no key, writes off. Build Verify (which runs generated code) is not available, and the recorded demo stops before it anyway.
 - **The address is public** unless you turn on Vercel's Deployment Protection, if your plan offers it. The look-only wrapper in `index.py` is the only barrier, since the app has no login.
-- Not tested on Vercel until you deploy it.
+- Deployed and working on Vercel. Not yet confirmed there: Download .docx.

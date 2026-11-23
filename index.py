@@ -71,6 +71,9 @@ async def _build_demo_project() -> None:
     async with _state["lock"]:
         if _state["ready"]:
             return
+        if app.state.store.projects.list():            # a project is already there (a restart inside a warm instance keeps its /tmp): never build a second one. Active only: a failed build archives its leftover, and must not block a retry
+            _state["ready"] = True
+            return
         try:
             phases = recorded_phases(app.state.settings)
             if phases:
