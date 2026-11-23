@@ -53,6 +53,14 @@ sed -i.bak 's#<div id="root"></div>#<script>try{localStorage.setItem("sdlc-workb
 rm -f "$HERE/public/index.html.bak"
 grep -q "sdlc-workbench.actor" "$HERE/public/index.html" || fail "Could not set the demo-user name in public/index.html (the page's root element changed?)"
 
+# 3b. Save the finished demo project as a database file (backend/seed/demo.db), so every copy of the app on Vercel starts from the SAME project, with the same ids.
+# It replays the recordings just copied in (no model call, no server, nothing written outside a throwaway folder). If the recordings are stale it stops here.
+PYTHON="${PYTHON:-/Users/paragjain/dev-works/myenv/bin/python}"
+[ -x "$PYTHON" ] || fail "Python not found at $PYTHON (set PYTHON=/path/to/python to use another)"
+info "Building the demo project seed"
+PYTHONDONTWRITEBYTECODE=1 "$PYTHON" "$HERE/build_seed.py" || fail "The seed could not be built: the recordings may be out of date (see README.md)"
+success "Seed built"
+
 # 4. Belt and braces: nothing private may be in this folder, since it is about to be pushed ---------------------------------
 [ ! -e "$HERE/backend/data" ] || fail "backend/data is in this folder; stopping"
 if grep -rqE "^[A-Z_]*(KEY|SECRET|TOKEN|PASSWORD)=.+" "$HERE/backend/.env"; then fail "backend/.env holds something that looks like a key; stopping"; fi
