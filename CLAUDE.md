@@ -13,7 +13,8 @@ This folder only ever READS from it, and only when the owner runs `./refresh.sh 
 - **Never read or print the main project's `backend/.env`**, and never copy it. This folder's own `backend/.env` is committed on purpose and holds names and prices only.
 - **The owner commits and pushes**, and does the Vercel dashboard steps. Never commit, push, or run `vercel` / `gh repo create` for him.
 - **Do not hand-edit what `refresh.sh` copies** (`backend/app/`, `backend/recordings/demo/`, `public/`, `requirements.txt`): the next refresh overwrites it. If the app itself needs a change, that is a change in the main project, decided there, not here.
-- Hand-edited files are only: `index.py`, `vercel.json`, `backend/.env`, `refresh.sh`, `README.md`, `.gitignore`, `.python-version`, this file.
+- Hand-edited files are only: `index.py`, `vercel.json`, `backend/.env`, `refresh.sh`, `start.sh`, `local_serve.py`, `README.md`, `.gitignore`, `.python-version`, this file.
+- `start.sh` + `local_serve.py` are for the owner to try the demo on his own computer (`./start.sh`, http://127.0.0.1:8000). Vercel does not use them. `local_serve.py` imports `index.app` unchanged and only adds `public/` at `/`; the database is a throwaway folder outside the repo. Claude never starts it.
 - Keep the repo private: it holds the app code, the skill and prompt files, and recordings that contain full prompts.
 - macOS: `sed -i` needs `-i.bak`. Use `rm -f` on the `.bak` files afterwards.
 - Discuss first, then build; say what you will do and why before changing files, and keep changes small. The owner tries things himself and reports back.

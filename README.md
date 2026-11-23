@@ -18,6 +18,7 @@ This is a **separate project** with its own repository. It is a copy, not a link
 | `index.py` | Vercel's door. Builds the demo project on the first visit and turns away every request that would change something | you, by hand |
 | `vercel.json` | The function's time limit (300 s, the Hobby maximum) and the `backend/` folder to include | you, by hand |
 | `refresh.sh` | Pulls the latest app, recordings and screens in from the main project | |
+| `start.sh`, `local_serve.py` | Try the demo on your own computer before (or without) Vercel: `./start.sh`, then open http://127.0.0.1:8000. Throwaway database outside this folder; Vercel does not use these | you, by hand |
 
 ## How it works
 

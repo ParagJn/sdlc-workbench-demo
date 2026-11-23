@@ -10,3 +10,4 @@ pypdf>=5.1.0
 python-docx>=1.2.0
 Pillow>=10.1          # draws the ER pictures that go into the design documents' Word files (architecture/png.py)
 markdown-it-py>=3.0.0
+python-multipart>=0.0.20   # FastAPI needs it to load the upload routes; the main project's list leaves it out (refresh.sh adds this line back after each copy)

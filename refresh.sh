@@ -44,6 +44,9 @@ rsync -a --delete --exclude '__pycache__' --exclude '*.pyc' "$SRC/backend/app/" 
 rsync -a --delete                                           "$SRC/backend/recordings/demo/" "$HERE/backend/recordings/demo/"
 rsync -a --delete                                           "$SRC/frontend/dist/"           "$HERE/public/"
 cp "$SRC/backend/requirements.txt" "$HERE/requirements.txt"
+# The main project's list leaves out python-multipart, which FastAPI needs to load the document-upload routes. It is installed on the owner's own computer, so the main project
+# works, but a fresh install (Vercel) crashes on start-up without it. Add it back after every copy; harmless once the main project lists it too.
+grep -qi "^python-multipart" "$HERE/requirements.txt" || printf 'python-multipart>=0.0.20   # added by refresh.sh: FastAPI needs it for the upload routes\n' >> "$HERE/requirements.txt"
 
 # 3. Everyone is demo-user: the app keeps "who you are" in the browser, so put the name there before the app starts. This edits the COPY here only.
 sed -i.bak 's#<div id="root"></div>#<script>try{localStorage.setItem("sdlc-workbench.actor","demo-user")}catch(e){}</script><div id="root"></div>#' "$HERE/public/index.html"
